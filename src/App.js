@@ -4,7 +4,7 @@ import AvatarFramer from './components/AvatarFramer';
 function App() {
     return (
         <div className="App">
-            <h1><center>Nov 91-94 Avatar Framer</center></h1>
+            <h2><center>Nov 91-94 Avatar Framer</center></h2>
             <AvatarFramer />
         </div>
     );

@@ -12,7 +12,8 @@ const ImageFrameEditor = () => {
 
     useEffect(() => {
         const handleResize = () => {
-            const width = Math.min(window.innerWidth - 40, 250);
+            const width = Math.min(window.innerWidth - 140, 600);
+            console.log("Width",width);
             const height = width;
             setEditorSize({ width, height });
         };
@@ -74,21 +75,21 @@ const ImageFrameEditor = () => {
     };
 
     return (
-        <div style={{ textAlign: 'center', padding: '20px' }}>
-            <h1>🎨 Nào mình cùng lên xe buýt ! 🎨</h1>
-            <p>Nào mình cùng thay avatar    ! 🌟</p>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ textAlign: 'center', padding: '10px' }}>
+            {/*<h3>🎨 Nào mình cùng lên xe buýt ! 🎨</h3>*/}
+            {/*<p>Nào mình cùng thay avatar    ! 🌟</p>*/}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '10px' }}>
                 <input
                     type="file"
                     accept="image/*"
                     onChange={handleImageChange}
-                    style={{ marginBottom: '10px' }}
+                    style={{ marginBottom: '2px' }}
                 />
                 <Button
                     id="downloadButton"
                     onClick={handleDownload}
                     variant="contained"
-                    style={{ marginBottom: '10px', display: 'none' }}
+                    style={{ marginBottom: '2px', display: 'none' }}
                 >
                     📥 Download
                 </Button>
@@ -100,10 +101,10 @@ const ImageFrameEditor = () => {
                     step="0.1"
                     value={scale}
                     onChange={(e) => setScale(e.target.value)}
-                    style={{ marginBottom: '10px', display: 'none' }}
+                    style={{ marginBottom: '5px', display: 'none' }}
                 />
             </div>
-            <div style={{ position: 'relative', display: 'inline-block', width: '100%', maxWidth: '500px' }}>
+            <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
                 {image && (
                     <AvatarEditor
                         ref={editorRef}
@@ -131,6 +132,8 @@ const ImageFrameEditor = () => {
                     }}
                 />
             </div>
+            {/* Add an empty div at the bottom */}
+            <div style={{ height: '100px' }}></div>
         </div>
     );
 };
