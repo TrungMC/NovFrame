@@ -8,9 +8,8 @@ import {
     styled
 } from '@mui/material';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
-// import FileDownloadIcon from '@mui/icons-material/FileDownload';
 
-const StyledPaper = styled(Paper)(({ theme }) => ({
+const StyledPaper = styled(Paper)(({theme}) => ({
     maxWidth: 600,
     margin: '0 auto',
     padding: theme.spacing(2),
@@ -37,11 +36,11 @@ const ImageFrameEditor = () => {
     const editorRef = useRef(null);
     const frameRef = useRef(null);
     const frameImage = 'frame.png';
+    const [isDownloading, setIsDownloading] = useState(false);
 
     useEffect(() => {
         const handleResize = () => {
             const width = Math.min(window.innerWidth - 140, 600);
-            console.log("Width", width);
             const height = width;
             setEditorSize({width, height});
         };
@@ -68,44 +67,102 @@ const ImageFrameEditor = () => {
         }
     };
 
-    const handleDownload = () => {
-        if (editorRef.current) {
-            const frameImg = new Image();
-            frameImg.src = frameImage;
-            frameImg.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = frameImg.width;
-                canvas.height = frameImg.height;
+    // Helper function to load image as Promise
+    const loadImage = (src) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';  // Enable CORS
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = src;
+        });
+    };
 
-                editorRef.current.getImage().toBlob((blob) => {
-                    const img = new Image();
-                    img.src = URL.createObjectURL(blob);
-                    img.onload = () => {
-                        ctx.drawImage(img, 0, 0, frameImg.width, frameImg.height);
-                        ctx.drawImage(frameImg, 0, 0, frameImg.width, frameImg.height);
+    // Helper function to create blob from canvas
+    const canvasToBlob = (canvas) => {
+        return new Promise((resolve) => {
+            canvas.toBlob(resolve, 'image/png', 1.0);
+        });
+    };
 
-                        const url = canvas.toDataURL('image/png');
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'novavatar-4u.png';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                    };
-                });
-            };
+    const handleDownload = async () => {
+        if (!editorRef.current || isDownloading) return;
+
+        try {
+            setIsDownloading(true);
+
+            // Get the edited image from AvatarEditor
+            const editedCanvas = editorRef.current.getImage();
+            const editedContext = editedCanvas.getContext('2d');
+
+            // Load the frame image
+            const frameImg = await loadImage(frameImage);
+
+            // Create a new canvas for the final image
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = frameImg.width;
+            finalCanvas.height = frameImg.height;
+            const finalContext = finalCanvas.getContext('2d');
+
+            // Draw the edited image
+            finalContext.drawImage(editedCanvas, 0, 0, frameImg.width, frameImg.height);
+
+            // Draw the frame
+            finalContext.drawImage(frameImg, 0, 0, frameImg.width, frameImg.height);
+
+            try {
+                // First attempt: Using Blob and createObjectURL
+                const blob = await canvasToBlob(finalCanvas);
+                const blobUrl = URL.createObjectURL(blob);
+
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = 'novavatar-4u.png';
+
+                // Append link to body (required for Firefox)
+                document.body.appendChild(link);
+
+                // Trigger download
+                link.click();
+
+                // Cleanup
+                document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+            } catch (error) {
+                console.log('Blob download failed, trying alternative method:', error);
+
+                // Fallback: Using dataURL
+                const dataUrl = finalCanvas.toDataURL('image/png');
+
+                // For iOS Safari
+                if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+                    // Open image in new tab
+                    window.open(dataUrl);
+                } else {
+                    const link = document.createElement('a');
+                    link.href = dataUrl;
+                    link.download = 'novavatar-4u.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            }
+        } catch (error) {
+            console.error('Download failed:', error);
+            alert('Sorry, there was an error downloading your image. Please try again or use a different browser.');
+        } finally {
+            setIsDownloading(false);
         }
     };
 
     return (
         <StyledPaper elevation={3}>
-            <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <Box sx={{p: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
+                <Box sx={{display: 'flex', justifyContent: 'center'}}>
                     <Button
                         component="label"
                         variant="contained"
-                        startIcon={<CameraAltIcon />}
+                        startIcon={<CameraAltIcon/>}
                         sx={{
                             background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
                             boxShadow: '0 3px 5px 2px rgba(33, 203, 243, .3)',
@@ -124,7 +181,7 @@ const ImageFrameEditor = () => {
                     </Button>
                 </Box>
 
-                <Box sx={{ width: '100%', mb: 2 }}>
+                <Box sx={{width: '100%', mb: 2}}>
                     <Slider
                         id="scaleSlider"
                         min={-3}
@@ -148,7 +205,7 @@ const ImageFrameEditor = () => {
                     id="downloadButton"
                     variant="contained"
                     onClick={handleDownload}
-                    // startIcon={<FileDownloadIcon />}
+                    disabled={isDownloading}
                     sx={{
                         display: 'none',
                         background: 'linear-gradient(45deg, #4CAF50 30%, #81C784 90%)',
@@ -158,7 +215,7 @@ const ImageFrameEditor = () => {
                         }
                     }}
                 >
-                    Tải về thay avatar thôi ⬇️
+                    {isDownloading ? 'Đang tải...' : 'Tải về thay avatar thôi ⬇️'}
                 </Button>
 
                 <Paper
@@ -171,41 +228,50 @@ const ImageFrameEditor = () => {
                         overflow: 'hidden',
                         bgcolor: 'white',
                         p: 1,
-                        minHeight: editorSize.height + 100, // Added to maintain height
-                        '& > div': {  // Target AvatarEditor
+                        minHeight: editorSize.height + 100,
+                        '& > div': {
                             margin: '0 auto'
                         }
                     }}
                 >
-                    {image && (
-                        <AvatarEditor
-                            ref={editorRef}
-                            image={image}
-                            width={editorSize.width}
-                            height={editorSize.height}
-                            border={50}
-                            scale={scale}
-                            rotate={0}
-                            style={{position: 'absolute', top: 0, left: 0, zIndex: 1}}
+                    <div style={{position: 'relative', display: 'inline-block', width: '100%'}}>
+                        {image && (
+                            <AvatarEditor
+                                ref={editorRef}
+                                image={image}
+                                width={editorSize.width}
+                                height={editorSize.height}
+                                border={50}
+                                scale={scale}
+                                rotate={0}
+                                style={{position: 'absolute', top: 0, left: 0, zIndex: 1}}
+                                crossOrigin="anonymous"
+                            />
+                        )}
+                        <img
+                            ref={frameRef}
+                            src={frameImage}
+                            alt="Frame"
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                zIndex: 2,
+                                width: editorSize.width + 100,
+                                height: editorSize.height + 100,
+                                pointerEvents: 'none',
+                            }}
+                            crossOrigin="anonymous"
                         />
-                    )}
-                    <img
-                        ref={frameRef}
-                        src={frameImage}
-                        alt="Frame"
-                        style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            zIndex: 2,
-                            width: editorSize.width + 100,
-                            height: editorSize.height + 100,
-                            pointerEvents: 'none',
-                        }}
-                    />
+                    </div>
+                    <div style={{textAlign: 'center', marginTop: '10px'}}>
+                        <span style={{color: 'blue', fontStyle: 'italic', fontSize: '0.8em'}}>
+                            Your custom caption goes here
+                        </span>
+                    </div>
                 </Paper>
 
-                <Box sx={{ height: '50px' }} />
+                <Box sx={{height: '50px'}}/>
             </Box>
         </StyledPaper>
     );
