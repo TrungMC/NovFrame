@@ -93,7 +93,7 @@ const ImageFrameEditor = () => {
 
             // Get the edited image from AvatarEditor
             const editedCanvas = editorRef.current.getImage();
-            const editedContext = editedCanvas.getContext('2d');
+            // const editedContext = editedCanvas.getContext('2d');
 
             // Load the frame image
             const frameImg = await loadImage(frameImage);
