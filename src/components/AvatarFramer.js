@@ -1,11 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import AvatarEditor from 'react-avatar-editor';
-import { Button } from '@mui/material';
+import {Button} from '@mui/material';
 
 const ImageFrameEditor = () => {
     const [image, setImage] = useState(null);
     const [scale, setScale] = useState(1);
-    const [editorSize, setEditorSize] = useState({ width: 250, height: 250 });
+    const [editorSize, setEditorSize] = useState({width: 250, height: 250});
     const editorRef = useRef(null);
     const frameRef = useRef(null);
     const frameImage = 'frame.png'; // Replace with your frame image path
@@ -13,9 +13,9 @@ const ImageFrameEditor = () => {
     useEffect(() => {
         const handleResize = () => {
             const width = Math.min(window.innerWidth - 140, 600);
-            console.log("Width",width);
+            console.log("Width", width);
             const height = width;
-            setEditorSize({ width, height });
+            setEditorSize({width, height});
         };
 
         window.addEventListener('resize', handleResize);
@@ -64,7 +64,7 @@ const ImageFrameEditor = () => {
                         const url = canvas.toDataURL('image/png');
                         const a = document.createElement('a');
                         a.href = url;
-                        a.download = 'avatar.png';
+                        a.download = 'novavatar-4u.png';
                         document.body.appendChild(a);
                         a.click();
                         document.body.removeChild(a);
@@ -75,24 +75,18 @@ const ImageFrameEditor = () => {
     };
 
     return (
-        <div style={{ textAlign: 'center', padding: '10px' }}>
+        <div style={{textAlign: 'center', padding: '10px'}}>
             {/*<h3>🎨 Nào mình cùng lên xe buýt ! 🎨</h3>*/}
             {/*<p>Nào mình cùng thay avatar    ! 🌟</p>*/}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '10px' }}>
+            <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', marginBottom: '10px'}}>
                 <input
                     type="file"
                     accept="image/*"
                     onChange={handleImageChange}
-                    style={{ marginBottom: '2px' }}
+                    style={{marginBottom: '2px'}}
                 />
-                <Button
-                    id="downloadButton"
-                    onClick={handleDownload}
-                    variant="contained"
-                    style={{ marginBottom: '2px', display: 'none' }}
-                >
-                    📥 Download
-                </Button>
+            </div>
+            <div style={{display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center'}}>
                 <input
                     id="scaleSlider"
                     type="range"
@@ -101,10 +95,20 @@ const ImageFrameEditor = () => {
                     step="0.1"
                     value={scale}
                     onChange={(e) => setScale(e.target.value)}
-                    style={{ marginBottom: '5px', display: 'none' }}
+                    style={{flex: '2 1 auto', marginBottom: '5px', marginRight: '5px', display: 'none'}}
                 />
+                <Button
+                    id="downloadButton"
+                    onClick={handleDownload}
+                    variant="contained"
+                    style={{flex: '1 1 auto', marginBottom: '2px', marginLeft: '5px', display: 'none'}}
+                >
+                    Download
+                </Button>
             </div>
-            <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+
+
+            <div style={{position: 'relative', display: 'inline-block', width: '100%'}}>
                 {image && (
                     <AvatarEditor
                         ref={editorRef}
@@ -114,7 +118,7 @@ const ImageFrameEditor = () => {
                         border={50}
                         scale={scale}
                         rotate={0}
-                        style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}
+                        style={{position: 'absolute', top: 0, left: 0, zIndex: 1}}
                     />
                 )}
                 <img
@@ -126,14 +130,14 @@ const ImageFrameEditor = () => {
                         top: 0,
                         left: 0,
                         zIndex: 2,
-                        width: editorSize.width+100,
-                        height: editorSize.height+100,
+                        width: editorSize.width + 100,
+                        height: editorSize.height + 100,
                         pointerEvents: 'none', // Allow mouse events to pass through
                     }}
                 />
             </div>
             {/* Add an empty div at the bottom */}
-            <div style={{ height: '100px' }}></div>
+            <div style={{height: '100px'}}></div>
         </div>
     );
 };
