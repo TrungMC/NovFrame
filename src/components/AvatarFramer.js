@@ -93,7 +93,9 @@ const ImageFrameEditor = () => {
     const frameImage = 'ams_frame.png';
     const [isDownloading, setIsDownloading] = useState(false);
     const containerRef = useRef(null);
-
+    const [position, setPosition] = useState({x: 0, y: 0});
+    const [aspectRatio, setAspectRatio] = useState(1); // Default aspect ratio
+    const [showNotes, setShowNotes] = useState(false);
 
     useEffect(() => {
         const calculateSize = () => {
@@ -123,6 +125,11 @@ const ImageFrameEditor = () => {
             const reader = new FileReader();
             reader.onloadend = () => {
                 setImage(reader.result);
+                const img = new Image();
+                img.src = reader.result;
+                img.onload = () => {
+                    setAspectRatio(img.width / img.height); // Calculate and set aspect ratio
+                };
             };
             reader.readAsDataURL(file);
         }
@@ -162,78 +169,97 @@ const ImageFrameEditor = () => {
         });
     };
 
+
     const handleDownload = async () => {
         if (!editorRef.current || isDownloading) return;
 
         try {
             setIsDownloading(true);
 
-            // Get the edited image from AvatarEditor
-            const editedCanvas = editorRef.current.getImage();
-            // const editedContext = editedCanvas.getContext('2d');
+            // Get image properties from AvatarEditor
+            //const position = editorRef.current.getCroppingRect(); // Position of cropped area
+            //const scale = editorRef.current.props.scale || 1;
+            //const rotate = editorRef.current.props.rotate || 0; // Get current rotation
+            console.log("Scale:", scale);
+            console.log("Rotate:", rotate);
 
-            // Load the frame image
+            // Load frame image
             const frameImg = await loadImage(frameImage);
+            const frameWidth = frameImg.width; // 2048
+            const frameHeight = frameImg.height; // 2048
 
-            // Create a new canvas for the final image
+            // Create a new canvas for final image
             const finalCanvas = document.createElement('canvas');
-            finalCanvas.width = frameImg.width;
-            finalCanvas.height = frameImg.height;
+            finalCanvas.width = frameWidth;
+            finalCanvas.height = frameHeight;
             const finalContext = finalCanvas.getContext('2d');
 
-            // Draw the edited image
-            finalContext.drawImage(editedCanvas, 0, 0, frameImg.width, frameImg.height);
+            // Calculate canvas dimensions (display size)
+            const editorCanvasWidth = editorSize.width; // e.g., 398
+            const editorCanvasHeight = editorSize.height; // e.g., 398
 
-            // Draw the frame
-            finalContext.drawImage(frameImg, 0, 0, frameImg.width, frameImg.height);
+            // Calculate scaling factor between canvas and frame
+            const scaleFactor = frameWidth / editorCanvasWidth; // e.g., 2048 / 398
 
-            try {
-                // First attempt: Using Blob and createObjectURL
-                const blob = await canvasToBlob(finalCanvas);
-                const blobUrl = URL.createObjectURL(blob);
+            // Calculate new scaled image height and width while maintaining aspect ratio
+            const imageHeight = editorCanvasHeight * scale * scaleFactor;
+            const imageWidth = imageHeight * aspectRatio; // Maintain aspect ratio
+            // Calculate adjusted offsets based on cropping position and scaling factor
+            // Adjusting offset calculation to account for potential misalignment
+            const offsetX = (position.x * editorCanvasWidth);//- (imageWidth / 2) + (frameWidth / 2);
+            const offsetY = (position.y * editorCanvasHeight);//- (imageHeight / 2) + (frameHeight / 2);
 
-                const link = document.createElement('a');
-                link.href = blobUrl;
-                link.download = 'novavatar-4u.png';
 
-                // Append link to body (required for Firefox)
-                document.body.appendChild(link);
+            console.log("Calculated Offsets - X:", offsetX, "Y:", offsetY);
 
-                // Trigger download
-                link.click();
+            // Draw uploaded image
+            const uploadImg = editorRef.current.props.image;
+            const img = await loadImage(uploadImg);
 
-                // Cleanup
-                document.body.removeChild(link);
-                setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
-            } catch (error) {
-                console.log('Blob download failed, trying alternative method:', error);
+            // Save the current context state before transformations
+            finalContext.save();
 
-                // Fallback: Using dataURL
-                const dataUrl = finalCanvas.toDataURL('image/png');
+            // Translate to center of the canvas
+            finalContext.translate(frameWidth / 2, frameHeight / 2);
 
-                // For iOS Safari
-                if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
-                    // Open image in new tab
-                    window.open(dataUrl);
-                } else {
-                    const link = document.createElement('a');
-                    link.href = dataUrl;
-                    link.download = 'novavatar-4u.png';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                }
-            }
+            // Rotate the context
+            finalContext.rotate((rotate * Math.PI) / 180); // Convert degrees to radians
+
+            // Translate back to top-left corner after rotation
+            finalContext.translate(-imageWidth / 2, -imageHeight / 2);
+
+            // Draw the image with offsets applied
+            finalContext.drawImage(img, offsetX, offsetY, imageWidth, imageHeight);
+
+            // Restore context to its original state before drawing the frame
+            finalContext.restore();
+
+            // Draw the frame on top
+            finalContext.drawImage(frameImg, 0, 0, frameWidth, frameHeight);
+
+            // Handle download
+            const blob = await canvasToBlob(finalCanvas);
+            const blobUrl = URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = 'novavatar-4u.png';
+
+            document.body.appendChild(link);
+            link.click();
+
+            document.body.removeChild(link);
+
         } catch (error) {
             console.error('Download failed:', error);
-            alert('Sorry, there was an error downloading your image. Please try again or use a different browser.');
         } finally {
             setIsDownloading(false);
         }
     };
 
+
     return (
-        <Container maxWidth="lg" sx={{ height: '100vh', p: 0 }}>
+        <Container maxWidth="lg" sx={{height: '100vh', p: 0}}>
             <StyledPaper elevation={3}>
                 <GlowingTitle variant={isMobile ? "h4" : "h3"}>
                     Amsers Avatar Framer
@@ -288,17 +314,20 @@ const ImageFrameEditor = () => {
                             opacity: 0,
                             animation: 'fadeIn 0.5s forwards',
                             '@keyframes fadeIn': {
-                                to: { opacity: 1 }
+                                to: {opacity: 1}
                             }
                         }}>
                             <Grid container spacing={2}>
                                 <Grid item xs={12} sm={6}>
                                     <SliderLabel>
-                                        <ZoomInIcon /> Nhỏ to
+                                        <ZoomInIcon/> Nhỏ to
                                     </SliderLabel>
                                     <Slider
                                         value={scale}
-                                        onChange={(e, newValue) => setScale(newValue)}
+                                        onChange={(e, newValue) => {
+                                            setScale(newValue);
+                                            console.log("New Scale:", newValue); // Log new scale value
+                                        }}
                                         min={-2}
                                         max={3}
                                         step={0.1}
@@ -321,11 +350,14 @@ const ImageFrameEditor = () => {
                                 </Grid>
                                 <Grid item xs={12} sm={6}>
                                     <SliderLabel>
-                                        <RotateRightIcon />Sấp ngửa
+                                        <RotateRightIcon/>Sấp ngửa
                                     </SliderLabel>
                                     <Slider
                                         value={rotate}
-                                        onChange={(e, newValue) => setRotate(newValue)}
+                                        onChange={(e, newValue) => {
+                                            setRotate(newValue);
+                                            console.log("New Rotation:", newValue); // Log new rotation value
+                                        }}
                                         min={-180}
                                         max={180}
                                         step={1}
@@ -394,7 +426,7 @@ const ImageFrameEditor = () => {
                         >
                             <div style={{
                                 position: 'relative',
-                                width: editorSize.width + 100,
+                                width: editorSize.width + 104,
                                 height: editorSize.height + 100
                             }}>
                                 {image && (
@@ -408,6 +440,10 @@ const ImageFrameEditor = () => {
                                         rotate={rotate}
                                         style={{position: 'absolute', top: 0, left: 0, zIndex: 1}}
                                         crossOrigin="anonymous"
+                                        onPositionChange={(newPosition) => {
+                                            setPosition(newPosition);
+                                            console.log("New Position - X:", newPosition.x, "Y:", newPosition.y); // Log new position
+                                        }}
                                     />
                                 )}
                                 <img
@@ -433,11 +469,48 @@ const ImageFrameEditor = () => {
                                 typography: 'caption',
                                 fontStyle: 'italic'
                             }}>
-                                Thiết kế bởi Dũng PMU-code by TrungMC
+                                Thiết kế bởi Dũng PMU - lập trình bởi {' '}
+                                <Typography
+                                    component="span"
+                                    sx={{
+                                        color: 'blue',
+                                        textDecoration: 'underline',
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => setShowNotes(!showNotes)}
+                                >
+                                    TrungMC
+                                </Typography>
                             </Box>
                         </Paper>
                     </EditorContainer>
                 </Box>
+                {/* Note Section */}
+                <Box sx={{mt: 4, p: 2, backgroundColor: '#f0f0f0', borderRadius: 2}}>
+                    <Typography variant="body2" sx={{display: 'inline'}}>
+
+                    </Typography>
+                    {/*<Typography variant="h6" sx={{ fontWeight: 'bold' }}>*/}
+                    {/*    Ghi chú :*/}
+                    {/*</Typography>*/}
+                    {/* Note Section */}
+                    {showNotes && (
+                        <Box sx={{mt: 2, p: 2, backgroundColor: '#f0f0f0', borderRadius: 2}}>
+                            <Typography variant="body1">
+                                - Dùng trình duyệt phổ biến được hỗ trợ như Edge, Chrome, Firefox...
+                                - Không hoạt động với trình duyệt trong messenger/zalo
+                            </Typography>
+                            <Typography variant="body1">
+                                - Trân trọng gửi lời chào tới các thầy cô giáo và các bạn học trong đội tuyển tiếng Anh
+                                năm 1994
+                            </Typography>
+                            <Typography variant="body1">
+                                - CDT has joined #ams: chào HacNho, LeQuoc, Bart_Simpson, monkeee, PQLinh ...
+                            </Typography>
+                        </Box>
+                    )}
+                </Box>
+
             </StyledPaper>
         </Container>
     );
