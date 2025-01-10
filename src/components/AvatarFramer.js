@@ -101,7 +101,7 @@ const ImageFrameEditor = () => {
         const calculateSize = () => {
             if (!containerRef.current) return;
 
-            const padding = isMobile ? 16 : 32; // Adjust padding based on screen size
+            const padding = isMobile ? 1 : 2; // Adjust padding based on screen size
             const containerWidth = containerRef.current.offsetWidth - (padding * 2);
             const maxSize = Math.min(containerWidth, window.innerHeight * 0.6);
 
@@ -206,8 +206,8 @@ const ImageFrameEditor = () => {
             const imageWidth = imageHeight * aspectRatio; // Maintain aspect ratio
             // Calculate adjusted offsets based on cropping position and scaling factor
             // Adjusting offset calculation to account for potential misalignment
-            const offsetX = (position.x * editorCanvasWidth);//- (imageWidth / 2) + (frameWidth / 2);
-            const offsetY = (position.y * editorCanvasHeight);//- (imageHeight / 2) + (frameHeight / 2);
+            const offsetX = (position.x - 0.5) * (frameWidth / 2);
+            const offsetY = (position.y - 0.5) * (frameHeight / 2);
 
 
             console.log("Calculated Offsets - X:", offsetX, "Y:", offsetY);
@@ -488,29 +488,29 @@ const ImageFrameEditor = () => {
                 </Box>
                 {/* Note Section */}
 
-                    {/*<Typography variant="h6" sx={{ fontWeight: 'bold' }}>*/}
-                    {/*    Ghi chú :*/}
-                    {/*</Typography>*/}
-                    {/* Note Section */}
-                    {showNotes && (
-                        <Box sx={{mt: 2, p: 2, backgroundColor: '#f0f0f0', borderRadius: 2}}>
-                            <Typography variant="body1">
-                                🌐 Dùng trình duyệt phổ biến được hỗ trợ như: Edge, Chrome, Firefox...<br/>
-                                🚫 Không hoạt động với trình duyệt trong: Messenger/Zalo
+                {/*<Typography variant="h6" sx={{ fontWeight: 'bold' }}>*/}
+                {/*    Ghi chú :*/}
+                {/*</Typography>*/}
+                {/* Note Section */}
+                {showNotes && (
+                    <Box sx={{mt: 2, p: 2, backgroundColor: '#f0f0f0', borderRadius: 2}}>
+                        <Typography variant="body1">
+                            🌐 Dùng trình duyệt phổ biến được hỗ trợ như: Edge, Chrome, Firefox...<br/>
+                            🚫 Không hoạt động với trình duyệt trong: Messenger/Zalo
 
-                            </Typography>
-                            <Typography variant="body1">
-                                - Trân trọng gửi lời chào tới các thầy cô giáo và các bạn học trong đội tuyển tiếng Anh
-                                năm 1994🎓
-                            </Typography>
-                            <Typography variant="body1">
-                                {/**** Topic for #ams is Don't walk in front of me, I may not follow. Don't walk behind me, I may not lead. Just walk beside me and be my friend. To NOCry *Joyeux Anniversaire* (nhoveanh)<br/>*/}
-                                {/**** Topic for #ams set by Ke[voice] at Sun Oct 29 01:07:50 2000<br/>*/}
+                        </Typography>
+                        <Typography variant="body1">
+                            - Trân trọng gửi lời chào tới các thầy cô giáo và các bạn học trong đội tuyển tiếng Anh
+                            năm 1994🎓
+                        </Typography>
+                        <Typography variant="body1">
+                            {/**** Topic for #ams is Don't walk in front of me, I may not follow. Don't walk behind me, I may not lead. Just walk beside me and be my friend. To NOCry *Joyeux Anniversaire* (nhoveanh)<br/>*/}
+                            {/**** Topic for #ams set by Ke[voice] at Sun Oct 29 01:07:50 2000<br/>*/}
 
-                                - CDT has joined #ams: 👋 HacNho, LeQuoc, Bart_Simpson, monkeee, PQLinh ...
-                            </Typography>
-                        </Box>
-                    )}
+                            - CDT has joined #ams: 👋 HacNho, LeQuoc, Bart_Simpson, monkeee, PQLinh ...
+                        </Typography>
+                    </Box>
+                )}
 
 
             </StyledPaper>
