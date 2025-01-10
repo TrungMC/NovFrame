@@ -112,6 +112,7 @@ const ImageFrameEditor = () => {
                 width: editorDimension,
                 height: editorDimension
             });
+            console.log("Editor Size:", editorDimension);
         };
 
         calculateSize();
@@ -210,6 +211,7 @@ const ImageFrameEditor = () => {
             const offsetY = (position.y - 0.5) * (frameHeight / 2);
 
 
+
             console.log("Calculated Offsets - X:", offsetX, "Y:", offsetY);
 
             // Draw uploaded image
@@ -229,7 +231,7 @@ const ImageFrameEditor = () => {
             finalContext.translate(-imageWidth / 2, -imageHeight / 2);
 
             // Draw the image with offsets applied
-            finalContext.drawImage(img, offsetX, offsetY, imageWidth, imageHeight);
+            finalContext.drawImage(img, 0,0 , imageWidth, imageHeight);
 
             // Restore context to its original state before drawing the frame
             finalContext.restore();
