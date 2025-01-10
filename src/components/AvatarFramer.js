@@ -90,7 +90,7 @@ const ImageFrameEditor = () => {
     const [editorSize, setEditorSize] = useState({width: 250, height: 250});
     const editorRef = useRef(null);
     const frameRef = useRef(null);
-    const frameImage = 'frame.png';
+    const frameImage = 'ams_frame.png';
     const [isDownloading, setIsDownloading] = useState(false);
     const containerRef = useRef(null);
 
@@ -236,7 +236,7 @@ const ImageFrameEditor = () => {
         <Container maxWidth="lg" sx={{ height: '100vh', p: 0 }}>
             <StyledPaper elevation={3}>
                 <GlowingTitle variant={isMobile ? "h4" : "h3"}>
-                    Nov 91-94 Avatar ProMax
+                    Amsers Avatar Framer
                 </GlowingTitle>
 
                 <Box
