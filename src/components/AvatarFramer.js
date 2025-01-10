@@ -243,7 +243,7 @@ const ImageFrameEditor = () => {
 
             const link = document.createElement('a');
             link.href = blobUrl;
-            link.download = 'novavatar-4u.png';
+            link.download = 'amsavatar-4u.png';
 
             document.body.appendChild(link);
             link.click();
@@ -475,7 +475,8 @@ const ImageFrameEditor = () => {
                                     sx={{
                                         color: 'blue',
                                         textDecoration: 'underline',
-                                        cursor: 'pointer'
+                                        cursor: 'pointer',
+                                        fontSize: 'inherit' // Inherit font size from parent to match
                                     }}
                                     onClick={() => setShowNotes(!showNotes)}
                                 >
@@ -486,10 +487,7 @@ const ImageFrameEditor = () => {
                     </EditorContainer>
                 </Box>
                 {/* Note Section */}
-                <Box sx={{mt: 4, p: 2, backgroundColor: '#f0f0f0', borderRadius: 2}}>
-                    <Typography variant="body2" sx={{display: 'inline'}}>
 
-                    </Typography>
                     {/*<Typography variant="h6" sx={{ fontWeight: 'bold' }}>*/}
                     {/*    Ghi chú :*/}
                     {/*</Typography>*/}
@@ -497,19 +495,23 @@ const ImageFrameEditor = () => {
                     {showNotes && (
                         <Box sx={{mt: 2, p: 2, backgroundColor: '#f0f0f0', borderRadius: 2}}>
                             <Typography variant="body1">
-                                - Dùng trình duyệt phổ biến được hỗ trợ như Edge, Chrome, Firefox...
-                                - Không hoạt động với trình duyệt trong messenger/zalo
+                                🌐 Dùng trình duyệt phổ biến được hỗ trợ như: Edge, Chrome, Firefox...<br/>
+                                🚫 Không hoạt động với trình duyệt trong: Messenger/Zalo
+
                             </Typography>
                             <Typography variant="body1">
                                 - Trân trọng gửi lời chào tới các thầy cô giáo và các bạn học trong đội tuyển tiếng Anh
-                                năm 1994
+                                năm 1994🎓
                             </Typography>
                             <Typography variant="body1">
-                                - CDT has joined #ams: chào HacNho, LeQuoc, Bart_Simpson, monkeee, PQLinh ...
+                                {/**** Topic for #ams is Don't walk in front of me, I may not follow. Don't walk behind me, I may not lead. Just walk beside me and be my friend. To NOCry *Joyeux Anniversaire* (nhoveanh)<br/>*/}
+                                {/**** Topic for #ams set by Ke[voice] at Sun Oct 29 01:07:50 2000<br/>*/}
+
+                                - CDT has joined #ams: 👋 HacNho, LeQuoc, Bart_Simpson, monkeee, PQLinh ...
                             </Typography>
                         </Box>
                     )}
-                </Box>
+
 
             </StyledPaper>
         </Container>
