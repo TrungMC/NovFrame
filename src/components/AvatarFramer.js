@@ -85,6 +85,7 @@ const ImageFrameEditor = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [image, setImage] = useState(null);
+    const [oriUploadImage,setOriUploadImage] = useState(null);
     const [scale, setScale] = useState(1);
     const [rotate, setRotate] = useState(0);
     const [editorSize, setEditorSize] = useState({width: 250, height: 250});
@@ -94,7 +95,7 @@ const ImageFrameEditor = () => {
     const [isDownloading, setIsDownloading] = useState(false);
     const containerRef = useRef(null);
     const [position, setPosition] = useState({x: 0, y: 0});
-    const [aspectRatio, setAspectRatio] = useState(1); // Default aspect ratio
+    const [aspectRatio, setAspectRatio] = useState(1.0); // Default aspect ratio
     const [showNotes, setShowNotes] = useState(false);
 
     useEffect(() => {
@@ -129,28 +130,16 @@ const ImageFrameEditor = () => {
                 const img = new Image();
                 img.src = reader.result;
                 img.onload = () => {
-                    setAspectRatio(img.width / img.height); // Calculate and set aspect ratio
+                    const a = parseFloat((img.width / img.height).toFixed(2));
+                    setAspectRatio(a); // Calculate and set aspect ratio
+                    console.log("Image resolution:", img.width, "x", img.height, "Aspect Ratio:", aspectRatio);
                 };
+                setOriUploadImage(img); //Save the original image
             };
             reader.readAsDataURL(file);
         }
     };
 
-    // const handleImageChange1 = (e) => {
-    //     const file = e.target.files[0];
-    //     if (file) {
-    //         const reader = new FileReader();
-    //         reader.onloadend = () => {
-    //             setImage(reader.result);
-    //             document.getElementById('downloadButton').style.display = 'block';
-    //             document.getElementById('scaleSlider').style.display = 'block';
-    //         };
-    //         reader.readAsDataURL(file);
-    //     } else {
-    //         document.getElementById('downloadButton').style.display = 'none';
-    //         document.getElementById('scaleSlider').style.display = 'none';
-    //     }
-    // };
 
     // Helper function to load image as Promise
     const loadImage = (src) => {
@@ -170,25 +159,36 @@ const ImageFrameEditor = () => {
         });
     };
 
-
     const handleDownload = async () => {
         if (!editorRef.current || isDownloading) return;
 
         try {
             setIsDownloading(true);
 
-            // Get image properties from AvatarEditor
-            //const position = editorRef.current.getCroppingRect(); // Position of cropped area
-            //const scale = editorRef.current.props.scale || 1;
-            //const rotate = editorRef.current.props.rotate || 0; // Get current rotation
-            console.log("Scale:", scale);
-            console.log("Rotate:", rotate);
-
             // Load frame image
             const frameImg = await loadImage(frameImage);
             const frameWidth = frameImg.width; // 2048
             const frameHeight = frameImg.height; // 2048
 
+            // Draw uploaded image
+            const uploadImg = editorRef.current.props.image; //This is in the canvas,we can tell how small it is
+            const img = await loadImage(uploadImg);
+
+            console.log("Original Image:", img.width, "x", img.height);
+            // Get image properties from AvatarEditor
+            const position = editorRef.current.props.position; // Position of cropped area
+            //const scale = editorRef.current.props.scale || 1;
+            //const rotate = editorRef.current.props.rotate || 0; // Get current rotation
+            console.log("Scale:", scale);
+            console.log("Rotate:", rotate);
+
+            // Calculate new scaled image height and width while maintaining aspect ratio
+            //If image is portrait
+            console.log("Img info:", img.width, "x", img.height, "Aspect Ratio:", aspectRatio);
+            const imageWidth =frameWidth*scale; // newImage.width * scale*scaleFactor ;
+            const imageHeight = frameHeight*scale*1/aspectRatio; // imageWidth * aspectRatio; // Maintain aspect ratio
+
+            console.log("Image Size:", imageWidth, "x", imageHeight);
             // Create a new canvas for final image
             const finalCanvas = document.createElement('canvas');
             finalCanvas.width = frameWidth;
@@ -202,21 +202,25 @@ const ImageFrameEditor = () => {
             // Calculate scaling factor between canvas and frame
             const scaleFactor = frameWidth / editorCanvasWidth; // e.g., 2048 / 398
 
-            // Calculate new scaled image height and width while maintaining aspect ratio
-            const imageHeight = editorCanvasHeight * scale * scaleFactor;
-            const imageWidth = imageHeight * aspectRatio; // Maintain aspect ratio
+
             // Calculate adjusted offsets based on cropping position and scaling factor
-            // Adjusting offset calculation to account for potential misalignment
-            const offsetX = (position.x - 0.5) * (frameWidth / 2);
-            const offsetY = (position.y - 0.5) * (frameHeight / 2);
+            //Center it first
+            var offsetX = 0; //(frameWidth-imageWidth)/2;
+            var offsetY = (imageHeight-frameHeight)/4;
+            // if (position){
+            //     offsetX = (0.5-position.x) * (frameWidth / 2);
+            //     offsetY = (0.5-position.y) * (frameHeight / 2)/scaleFactor;
+            // }
 
 
+            //0.5565423327412677 Y: 0.3125
+            //We know the image is scaled to 1.2, at 1.0, the width of the image is the same as the frame
+            //Center x=0.5, y=0.5, move up, y=0.56, move left, x=0.5565423327412677
 
             console.log("Calculated Offsets - X:", offsetX, "Y:", offsetY);
 
-            // Draw uploaded image
-            const uploadImg = editorRef.current.props.image;
-            const img = await loadImage(uploadImg);
+
+
 
             // Save the current context state before transformations
             finalContext.save();
@@ -231,7 +235,8 @@ const ImageFrameEditor = () => {
             finalContext.translate(-imageWidth / 2, -imageHeight / 2);
 
             // Draw the image with offsets applied
-            finalContext.drawImage(img, 0,0 , imageWidth, imageHeight);
+
+            finalContext.drawImage(img, offsetX,offsetY , imageWidth, imageHeight);
 
             // Restore context to its original state before drawing the frame
             finalContext.restore();
@@ -428,8 +433,8 @@ const ImageFrameEditor = () => {
                         >
                             <div style={{
                                 position: 'relative',
-                                width: editorSize.width + 104,
-                                height: editorSize.height + 100
+                                width: editorSize.width ,
+                                height: editorSize.height
                             }}>
                                 {image && (
                                     <AvatarEditor
@@ -437,7 +442,7 @@ const ImageFrameEditor = () => {
                                         image={image}
                                         width={editorSize.width}
                                         height={editorSize.height}
-                                        border={50}
+                                        border={0}
                                         scale={scale}
                                         rotate={rotate}
                                         style={{position: 'absolute', top: 0, left: 0, zIndex: 1}}
@@ -457,8 +462,8 @@ const ImageFrameEditor = () => {
                                         top: 0,
                                         left: 0,
                                         zIndex: 2,
-                                        width: editorSize.width + 100,
-                                        height: editorSize.height + 100,
+                                        width: editorSize.width ,
+                                        height: editorSize.height ,
                                         pointerEvents: 'none',
                                     }}
                                     crossOrigin="anonymous"
