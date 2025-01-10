@@ -85,7 +85,7 @@ const ImageFrameEditor = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [image, setImage] = useState(null);
-    const [oriUploadImage,setOriUploadImage] = useState(null);
+    const [oriUploadImage, setOriUploadImage] = useState(null);
     const [scale, setScale] = useState(1);
     const [rotate, setRotate] = useState(0);
     const [editorSize, setEditorSize] = useState({width: 250, height: 250});
@@ -176,7 +176,7 @@ const ImageFrameEditor = () => {
 
             console.log("Original Image:", img.width, "x", img.height);
             // Get image properties from AvatarEditor
-            const position = editorRef.current.props.position; // Position of cropped area
+            //const position = editorRef.current.props.position; // Position of cropped area
             //const scale = editorRef.current.props.scale || 1;
             //const rotate = editorRef.current.props.rotate || 0; // Get current rotation
             console.log("Scale:", scale);
@@ -185,8 +185,8 @@ const ImageFrameEditor = () => {
             // Calculate new scaled image height and width while maintaining aspect ratio
             //If image is portrait
             console.log("Img info:", img.width, "x", img.height, "Aspect Ratio:", aspectRatio);
-            const imageWidth =frameWidth*scale; // newImage.width * scale*scaleFactor ;
-            const imageHeight = frameHeight*scale*1/aspectRatio; // imageWidth * aspectRatio; // Maintain aspect ratio
+            const imageWidth = frameWidth * scale; // newImage.width * scale*scaleFactor ;
+            const imageHeight = frameHeight * scale * 1 / aspectRatio; // imageWidth * aspectRatio; // Maintain aspect ratio
 
             console.log("Image Size:", imageWidth, "x", imageHeight);
             // Create a new canvas for final image
@@ -206,11 +206,12 @@ const ImageFrameEditor = () => {
             // Calculate adjusted offsets based on cropping position and scaling factor
             //Center it first
             var offsetX = 0; //(frameWidth-imageWidth)/2;
-            var offsetY = (imageHeight-frameHeight)/4;
-            // if (position){
-            //     offsetX = (0.5-position.x) * (frameWidth / 2);
-            //     offsetY = (0.5-position.y) * (frameHeight / 2)/scaleFactor;
-            // }
+            var offsetY = 0; //(imageHeight - frameHeight) / 2;
+            if (position) {
+                console.log("Position:", position);
+                offsetX =  (0.5 - position.x) * (imageWidth );
+                offsetY =  (0.5 - position.y) * (imageHeight );
+            }
 
 
             //0.5565423327412677 Y: 0.3125
@@ -218,8 +219,6 @@ const ImageFrameEditor = () => {
             //Center x=0.5, y=0.5, move up, y=0.56, move left, x=0.5565423327412677
 
             console.log("Calculated Offsets - X:", offsetX, "Y:", offsetY);
-
-
 
 
             // Save the current context state before transformations
@@ -236,7 +235,7 @@ const ImageFrameEditor = () => {
 
             // Draw the image with offsets applied
 
-            finalContext.drawImage(img, offsetX,offsetY , imageWidth, imageHeight);
+            finalContext.drawImage(img, offsetX, offsetY, imageWidth, imageHeight);
 
             // Restore context to its original state before drawing the frame
             finalContext.restore();
@@ -433,7 +432,7 @@ const ImageFrameEditor = () => {
                         >
                             <div style={{
                                 position: 'relative',
-                                width: editorSize.width ,
+                                width: editorSize.width,
                                 height: editorSize.height
                             }}>
                                 {image && (
@@ -462,8 +461,8 @@ const ImageFrameEditor = () => {
                                         top: 0,
                                         left: 0,
                                         zIndex: 2,
-                                        width: editorSize.width ,
-                                        height: editorSize.height ,
+                                        width: editorSize.width,
+                                        height: editorSize.height,
                                         pointerEvents: 'none',
                                     }}
                                     crossOrigin="anonymous"
